@@ -140,3 +140,37 @@ sources:
       per_domain_delay_seconds: 3.0
       respect_robots_txt: true
       request_timeout_seconds: 15.0
+
+  # CarWale customer reviews -- real English-language vehicle-model reviews scraped from
+  # carwale.com. A third, structurally different chapter from KBA/Switzerland/Google Trends
+  # (real market/search outcomes) and GDELT (media coverage): this measures actual customer
+  # opinions, via a custom-trained aspect NER model (ENGINE/COMFORT/SERVICE/... entities,
+  # trained from scratch on manually annotated review sentences, not fine-tuned from a
+  # pretrained pipeline -- these aspect labels have no pretrained equivalent) feeding an
+  # aspect classifier (SVC/RandomForest/LogisticRegression). See
+  # notebooks/customer_review_analysis.ipynb and src/car_interest_nlp/reviews/.
+  reviews:
+    enabled: true
+    source_type: "customer_reviews"
+    access_method: "web_scrape"
+    base_url: "https://www.carwale.com/"
+    raw_directory: "data/raw/reviews"
+    rate_limit_seconds: 1.0
+    # A real browser UA, not this project's usual bot-identifying UA -- CarWale's review
+    # pages did not return review content for a plain bot UA during development (confirmed
+    # directly), only for a UA that looks like an ordinary browser request.
+    user_agent: "Mozilla/5.0"
+    # Brands used to build the labeled training corpus (matches the original manually
+    # annotated dataset: Volkswagen + BYD, one German and one Chinese flagship brand).
+    tracked_brands: ["byd-cars", "volkswagen-cars"]
+    models_per_brand: 4
+    # Broader brand set used only for the "apply the trained model to new reviews" chapter
+    # -- adds MG (Chinese) and BMW/Mercedes-Benz (German) on top of the training brands.
+    extended_brands: ["byd-cars", "mg-cars", "volkswagen-cars", "bmw-cars", "mercedes-benz-cars"]
+    models_per_brand_extended: 10
+    max_pages_per_model: 20
+    # A review-listing page with fewer than this many cards is treated as the last page for
+    # that model (CarWale pages full pages at exactly 10 cards).
+    min_cards_per_page: 10
+    validation_rules:
+      required_columns: ["Title", "Comment", "Rating", "brand_slug"]

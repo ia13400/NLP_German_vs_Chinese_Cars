@@ -1,34 +1,38 @@
-# Analysis of German vs. Chinese Car Brand Market Share, Search Interest & Media Coverage (KBA, Switzerland, Google Trends & GDELT)
+# Analysis of German vs. Chinese Car Brand Market Share, Search Interest, Media Coverage & Customer Reviews (KBA, Switzerland, Google Trends, GDELT & CarWale)
 
-German title: Analyse des Marktanteils, Sucheinteresses und der Medienberichterstattung
-deutscher und chinesischer Automarken (KBA, Schweiz, Google Trends, GDELT).
+German title: Analyse des Marktanteils, Sucheinteresses, der Medienberichterstattung und der
+Kundenbewertungen deutscher und chinesischer Automarken (KBA, Schweiz, Google Trends, GDELT,
+CarWale).
 
-This project measures German vs. Chinese car brands using four real, independent data
+This project measures German vs. Chinese car brands using five real, independent data
 sources: new-vehicle registration counts published by the Kraftfahrt-Bundesamt (KBA,
 national/Germany), new-vehicle registration counts published by the Swiss Federal Statistical
 Office (national/Switzerland), the public relative search-interest index published by Google
-Trends (trends.google.com), and English-language news coverage from the GDELT Project's public
-DOC 2.0 API (gdeltproject.org). There is no synthetic or sample data anywhere in the pipeline,
-no dashboard, and no test suite: every entry point requires real, downloaded (or manually
-obtained) data and raises a clear error rather than substituting fake data when it isn't
-available.
+Trends (trends.google.com), English-language news coverage from the GDELT Project's public
+DOC 2.0 API (gdeltproject.org), and real customer vehicle reviews scraped from CarWale
+(carwale.com). There is no synthetic or sample data anywhere in the pipeline, no dashboard, and
+no test suite: every entry point requires real, downloaded/scraped (or manually obtained) data
+and raises a clear error rather than substituting fake data when it isn't available.
 
 **KBA and Switzerland measure the same kind of thing (a national new-registration flow) and so
 are meaningfully comparable to each other in kind** -- though Switzerland is a much smaller
-market than Germany, so compare percentages, not absolute counts. **Google Trends and GDELT
-measure genuinely different kinds of things: public search interest and public media coverage,
-not market outcomes** -- neither must ever be read as a market-share/registration figure.
-**Google Trends is, unlike KBA/Switzerland, deliberately limited to just two brands (Volkswagen
-and BYD)** as a directional indicator (see "Google Trends" below for why); **GDELT instead
-covers the top 5 German and top 5 Chinese brands** (ranked from real KBA registrations, see
-"GDELT News Analysis" below), since GDELT has no per-request keyword cap the way Trends does.
+market than Germany, so compare percentages, not absolute counts. **Google Trends, GDELT, and
+CarWale reviews each measure a genuinely different kind of thing -- public search interest,
+public media coverage, and real customer opinion, respectively, not market outcomes** -- none
+of the three must ever be read as a market-share/registration figure. **Google Trends is,
+unlike KBA/Switzerland, deliberately limited to just two brands (Volkswagen and BYD)** as a
+directional indicator (see "Google Trends" below for why); **GDELT instead covers the top 5
+German and top 5 Chinese brands** (ranked from real KBA registrations, see "GDELT News
+Analysis" below), since GDELT has no per-request keyword cap the way Trends does; **CarWale
+reviews train on Volkswagen + BYD and then apply the trained model to a broader set (adding
+MG, BMW, Mercedes-Benz)** -- see "CarWale Customer Review Aspect Analysis" below.
 
 ## Project motivation
 
 The central question is how German and Chinese car brands have evolved over the last several
 years, as a real market outcome (national new-registration flow, KBA/Switzerland), as public
-search interest (Google Trends), and as public English-language media coverage (GDELT) -- and
-whether these perspectives move together or diverge.
+search interest (Google Trends), as public English-language media coverage (GDELT), and as real
+customer opinion (CarWale reviews) -- and whether these perspectives move together or diverge.
 
 ## Research questions
 
@@ -47,6 +51,9 @@ whether these perspectives move together or diverge.
 7. How has English-language media attention to the top-5 German vs. top-5 Chinese brands
    changed over time (GDELT, 2021-2025), and what vocabulary/entities (technology, regulation,
    suppliers, factories, ...) characterize that coverage?
+8. What do real customers actually talk about in their vehicle reviews (engine, comfort,
+   service, safety, price, ...), and does the average rating for a given aspect differ between
+   German and Chinese brands?
 
 ## Data sources
 
@@ -56,10 +63,12 @@ whether these perspectives move together or diverge.
 | [Swiss Federal Statistical Office](https://www.stats.swiss/) | New passenger-car registrations per year | National (Switzerland) | Real market flow; methodologically comparable to KBA |
 | [Google Trends](https://trends.google.com/) | Relative public search-interest index, weekly/monthly (aggregated to annual) | Worldwide (configurable geo); limited to Volkswagen & BYD | Search interest only -- not a market outcome; not comparable in kind to KBA/Switzerland; directional indicator, not a comprehensive brand comparison |
 | [GDELT Project](https://www.gdeltproject.org/) (DOC 2.0 API) | English-language news article metadata/volume/tone, 2021-2025 | Global, English sources only; top-5 German + top-5 Chinese brands | Media coverage only -- not a market outcome or a measure of consumer intent |
+| [CarWale](https://www.carwale.com/) (web scrape) | Real customer vehicle reviews (title, comment, star rating) | India-based reviews, English; trained on Volkswagen + BYD, applied to a wider brand set | Real customer opinion/aspect focus -- not a market outcome, search interest, or media coverage |
 
 `src/car_interest_nlp/data/kba.py`, `src/car_interest_nlp/data/switzerland.py`,
-`src/car_interest_nlp/data/google_trends.py`, and `src/car_interest_nlp/data/gdelt.py` are the
-four adapters. KBA's registration-overview pages link to further subpages rather than to files
+`src/car_interest_nlp/data/google_trends.py`, `src/car_interest_nlp/data/gdelt.py`, and
+`src/car_interest_nlp/reviews/scraping.py` are the five adapters. KBA's registration-overview
+pages link to further subpages rather than to files
 directly, so a specific `listing_url` must be located manually on kba.de before `mode="live"`
 can discover/download files; Switzerland is queried directly from a public SDMX 2.1 REST API
 (`disseminate.stats.swiss`) -- one call for the national new-registration figures (already
@@ -396,6 +405,83 @@ instead (see "GDELT News Analysis" above) -- call `ensure_gdelt_timelinevol_data
 `ensure_gdelt_artlist_dataset()` directly (or the combined `ensure_gdelt_dataset()`), or run
 `scripts/download_gdelt_news.py`.
 
+## CarWale Customer Review Aspect Analysis
+
+A fifth, structurally different chapter (`notebooks/customer_review_analysis.ipynb`, a
+separate notebook, since -- like the GDELT chapter -- this is a comparably large analytical
+axis on its own): real, English-language customer vehicle reviews scraped from
+[CarWale](https://www.carwale.com/), analyzed with a custom-trained aspect NER model and
+classifier. This chapter ports and cleans up a colleague's original four-notebook project
+(previously `Car_Brands/`) into this project's structure: all logic lives in
+`src/car_interest_nlp/reviews/`, the notebook only calls already-implemented functions, and
+every long-running phase (scraping, NER training) has a live/cached toggle plus a live
+progress bar, exactly like the GDELT chapter.
+
+**Web scraping, not an official API.** CarWale publishes no reviews API;
+`reviews/scraping.py` reads the real rendered review-listing pages directly. Every request is
+checked against carwale.com's real `robots.txt` first (`data/article_text.is_allowed_by_robots`,
+reused rather than duplicated) -- confirmed directly that its `Disallow` rules cover only
+account/search/API paths, not brand or `/reviews/` pages. Each (brand, model) pair is cached as
+its own JSON chunk under `data/raw/reviews/`, mirroring GDELT's per-chunk caching; already-
+cached models are never re-scraped. `ensure_reviews_dataset(mode=...)` takes `"live"` (fetch
+whatever is still missing) or `"cached"` (send no request at all, only report current
+coverage), the same convention as GDELT's `fetch_mode`.
+
+**Real browser User-Agent, not this project's usual bot UA.** CarWale's review pages did not
+return content for a plain bot-identifying UA during development (confirmed directly) -- only
+for a UA that looks like an ordinary browser request (`"Mozilla/5.0"`,
+`configs/sources.yaml`'s `reviews.user_agent`).
+
+**Training data is real, hand-annotated, and reused unchanged.** Two manually created files
+under `data/raw/reviews/` are the actual training input and are never regenerated:
+`cars_reviews_ner_inline.txt` (174 reviews with inline-marked aspect entities, e.g.
+`[driving experience]_PERFORMANCE`) and `cars_reviews_labeled.json` (the same reviews, each
+tagged with one overall aspect class). `reviews/text_prep.py` parses the inline bracket markup
+into spaCy character offsets (`parse_inline_annotations`, ported from the original notebook's
+exact bracket-scanning logic) and cleans each review (`clean_review_text`: strip URLs,
+e-mail addresses, phone-number-like digit runs, extra whitespace) before offsets are computed,
+so they stay valid for the cleaned text actually used in training.
+
+**Custom NER model, trained from scratch (no fine-tuning).** Unlike the GDELT chapter's NER
+(which fine-tunes a real pretrained spaCy pipeline), `reviews/ner_training.py` trains a blank
+English spaCy pipeline (`spacy.blank("en")`): the aspect labels (`ENGINE`, `COMFORT`,
+`SERVICE`, `SAFETY`, ...) are review-specific jargon with no equivalent in a general-purpose
+pretrained model, so starting from scratch is the correct choice here, matching the original
+approach. `ensure_review_ner_model(mode=...)` reuses an already-trained model under
+`data/interim/reviews/ner_model/` (`"cached"`, default) or always retrains (`"live"`).
+
+**Entity labels are discovered from the real training data, not hard-coded** --
+`text_prep.discover_entity_labels()` collects every label actually present in
+`cars_reviews_ner_inline.txt`, and the same list is used for both NER training and feature
+extraction. This fixes a real inconsistency in the original project: its feature-extraction
+step used a hand-written label list (`BUILD_QUALITY`, `SPARE_PART`, `FUEL_CONSUMPTION`,
+`VALUE_FOR_MONEY`) that did not match the labels actually annotated in the training text
+(`BUILD`, `SPARE`, `FUEL`, `VALUE`) -- four feature columns would always have been zero.
+
+**Aspect classification.** `reviews/features.py` runs the trained NER model over each labeled
+review (title + comment) and counts entities per label, producing a (reviews x labels)
+feature matrix; `reviews/classification.py` cross-validates three classifiers (SVC,
+RandomForest, LogisticRegression) via stratified 4-fold cross-validation with
+`scoring="f1_macro"` **passed explicitly** -- the original notebook's README documented
+"Macro F1" but its code called `cross_val_score(...)` without a `scoring=` argument, which
+defaults to plain accuracy for a classifier, not macro F1. The best-scoring model is refit on
+all data and saved; its confusion matrix is built from out-of-fold predictions
+(`cross_val_predict`), never predictions on data the model was trained on.
+`ensure_aspect_classifier(mode=...)` follows the same live/cached convention as the NER model.
+
+**Brand groups are resolved via `configs/brands.yaml`, not a separate hard-coded map.**
+`reviews/inference.py`'s `add_brand_group_columns()` maps each CarWale brand slug (e.g.
+`"byd-cars"`) to its canonical brand name and reuses the same
+`preprocessing.brand_matching.resolve_brands()` the KBA/Switzerland chapters use to attach
+`origin_group` ("german"/"chinese").
+
+**Applying the trained model to new reviews.** `configs/sources.yaml`'s `reviews.tracked_brands`
+(Volkswagen, BYD -- the original training brands) and `reviews.extended_brands` (adds MG,
+BMW, Mercedes-Benz) are scraped into the same `data/raw/reviews/` cache; `predict_aspects()`
+applies the trained NER model + classifier to this broader set, and the notebook visualizes
+the predicted aspect distribution (pie/bar) and average star rating per aspect, split by brand
+group (`visualization/reviews.py`).
+
 ## Architecture
 
 ```mermaid
@@ -423,31 +509,42 @@ flowchart LR
     C4 --> D4[Word clouds / NER Stage A+B]
     D4 --> F
 
+    A5[CarWale review chunks] --> B5[Raw per-model reviews]
+    B5 --> C5[Aspect NER model]
+    C5 --> D5[Entity-count features]
+    D5 --> E5[Aspect classifier]
+    E5 --> F
+
     F --> G[Notebooks]
 ```
 
 ## Project structure
 
 - `configs/` stores YAML configuration (`sources.yaml` for the KBA, Switzerland, Google Trends,
-  and GDELT sources, `brands.yaml` for canonical brand/alias mapping shared by all of them,
-  `ner_gazetteer.yaml` for the GDELT chapter's custom NER gazetteer, `project.yaml` for general
-  project settings).
+  GDELT, and CarWale reviews sources, `brands.yaml` for canonical brand/alias mapping shared by
+  all of them, `ner_gazetteer.yaml` for the GDELT chapter's custom NER gazetteer, `project.yaml`
+  for general project settings).
 - `data/` stores raw and processed real-data inputs (git-ignored, except cache metadata):
   `data/raw/registrations/kba/` + `data/interim/kba/` for KBA,
   `data/raw/registrations/switzerland/` + `data/interim/switzerland/` for Switzerland,
   `data/raw/trends/` + `data/interim/trends/` for Google Trends,
   `data/raw/gdelt/` (article/timeline chunks) + `data/raw/gdelt_articles/` (scraped full text)
-  + `data/interim/ner/` (NER seed/corrected annotations and trained models) for GDELT.
+  + `data/interim/ner/` (NER seed/corrected annotations and trained models) for GDELT, and
+  `data/raw/reviews/` (scraped review chunks + the two hand-annotated training files) +
+  `data/interim/reviews/` (trained NER model + aspect classifier) for CarWale reviews.
 - `artifacts/` stores figures, tables, reports, and cached results.
-- `notebooks/` contains two notebooks: `consumer_interest_analysis.ipynb` (an "Einführung"
+- `notebooks/` contains three notebooks: `consumer_interest_analysis.ipynb` (an "Einführung"
   chapter followed by one chapter per registration/search-interest source -- no CRISP-DM
-  structure) and `news_media_nlp_analysis.ipynb` (the GDELT news/word-cloud/NER chapter, kept
-  separate since it's a comparably large analytical axis on its own; every cell there calls an
-  already-implemented function from `src/`, with time-limit parameters set as plain variables
-  near the top rather than hardcoded in the `.py` files).
+  structure), `news_media_nlp_analysis.ipynb` (the GDELT news/word-cloud/NER chapter), and
+  `customer_review_analysis.ipynb` (the CarWale review scraping/NER/classification chapter) --
+  the latter two are kept separate since each is a comparably large analytical axis on its own;
+  every cell in all three calls an already-implemented function from `src/`, with time-limit
+  parameters set as plain variables near the top rather than hardcoded in the `.py` files.
 - `src/car_interest_nlp/` contains the reusable package, including `nlp/` (text cleaning,
-  TF-IDF, word clouds, and the `nlp/ner/` two-stage NER system) and `progress.py` (the shared
-  `TimeBudget`/progress-bar utility every long-running phase uses).
+  TF-IDF, word clouds, and the `nlp/ner/` two-stage NER system used by the GDELT chapter),
+  `reviews/` (scraping, text prep, NER training, feature extraction, classification, and
+  inference for the CarWale chapter), and `progress.py` (the shared `TimeBudget`/progress-bar
+  utility every long-running phase uses).
 
 ## Installation
 
@@ -470,9 +567,10 @@ Start the notebook server with:
 uv run jupyter lab
 ```
 
-Two notebooks: `consumer_interest_analysis.ipynb` (KBA/Switzerland/Google Trends) and
-`news_media_nlp_analysis.ipynb` (GDELT news/word clouds/NER) -- see "Project structure" above
-for why they're separate.
+Three notebooks: `consumer_interest_analysis.ipynb` (KBA/Switzerland/Google Trends),
+`news_media_nlp_analysis.ipynb` (GDELT news/word clouds/NER), and
+`customer_review_analysis.ipynb` (CarWale review scraping/aspect NER/classification) -- see
+"Project structure" above for why they're separate.
 
 ## Obtaining real data (required to run anything)
 
@@ -617,6 +715,25 @@ and works incrementally rather than blocking until 100% complete
 (`build_gdelt_analysis_dataset`/word clouds/NER are the exception that still requires *some*
 real data -- they raise/report emptiness, never fabricate a result).
 
+### CarWale reviews: scrape, then train
+
+The two hand-annotated training files must already be present at
+`data/raw/reviews/cars_reviews_ner_inline.txt` and `data/raw/reviews/cars_reviews_labeled.json`
+(see "CarWale Customer Review Aspect Analysis" above -- these are real manual annotation work,
+not reproducible by re-scraping, and are not shipped in this repository; place them there
+yourself if you have a copy). Scraping is only needed for the "apply the model to new reviews"
+chapter:
+
+```bash
+uv run python scripts/scrape_reviews.py --mode live --time-limit-minutes 60
+# -> scrapes real CarWale reviews for the configured brands/models into data/raw/reviews/,
+#    caching one JSON chunk per (brand, model); re-run to continue/extend coverage.
+#    --mode cached never sends a request, only reports current coverage.
+uv run python scripts/train_review_models.py --mode live
+# -> trains (or, --mode cached, reuses) the aspect NER model and classifier from the
+#    hand-annotated files above, saving to data/interim/reviews/.
+```
+
 ## Scripts
 
 ```bash
@@ -632,6 +749,8 @@ uv run python scripts/generate_news_wordclouds.py
 uv run python scripts/build_ner_seed.py [--output ... --max-documents ...]
 uv run python scripts/train_ner_model.py --annotations <corrected.jsonl> [--epochs ... --time-limit-minutes ...]
 uv run python scripts/evaluate_ner_model.py --model-dir <dir> --dev-split <dev_split.jsonl>
+uv run python scripts/scrape_reviews.py [--brands ... --models-per-brand ... --mode live|cached]
+uv run python scripts/train_review_models.py [--mode live|cached --ner-epochs ...]
 uv run python scripts/build_source_registry.py
 uv run python scripts/prepare_data.py
 uv run python scripts/run_analysis.py
@@ -674,6 +793,10 @@ There is no automated test suite in this repository.
 - Cache: `artifacts/cache/`
 - NER seed annotations, corrections, and trained models: `data/interim/ner/` (not `artifacts/`,
   since these are inputs to/outputs of a training process, not report figures/tables)
+- Review aspect NER model and classifier: `data/interim/reviews/ner_model/` and
+  `data/interim/reviews/classifier/` (same reasoning as the GDELT NER models above); figures
+  (`artifacts/figures/reviews/`): `aspect_confusion_matrix.png`, `predicted_aspect_pie.png` /
+  `predicted_aspect_bar.png`, and `average_rating_by_aspect_group.png` (German vs. Chinese)
 
 ## Ethics and legal notes
 
@@ -683,14 +806,20 @@ underlying source: Federal Roads Office/ASTRA), Google Trends' publicly publishe
 search-interest index (accessed via the unofficial `pytrends` client, since Google publishes no
 official Trends API), and the GDELT Project's public DOC 2.0 API. Raw data paths are excluded
 from Git. The project does not process any personal data. **The optional full-article-text
-scraping module (`data/article_text.py`) is the one part of this project that fetches content
-from arbitrary third-party domains rather than a documented public API/data source** -- it
-always checks and respects robots.txt (never bypassed) and rate-limits itself per domain, but
-this is best-effort robots.txt compliance only: individual publishers' Terms of Service may
-still restrict automated access beyond what robots.txt covers, and this project does not verify
-each site's ToS individually. Scraped content is used solely for local, non-redistributed text
-statistics (word frequency/NER) and is never reproduced or republished. It is off by default and
-must be explicitly enabled per run.
+scraping module (`data/article_text.py`) and the CarWale review scraper
+(`reviews/scraping.py`) are the two parts of this project that fetch content from a
+third-party site rather than a documented public API/data source** -- both always check and
+respect robots.txt (never bypassed; CarWale's scraper reuses `article_text.py`'s own
+`is_allowed_by_robots()` rather than a separate implementation) and rate-limit themselves, but
+this is best-effort robots.txt compliance only: the site's own Terms of Service may still
+restrict automated access beyond what robots.txt covers, and this project does not verify
+either site's ToS individually. Scraped article content is used solely for local, non-
+redistributed text statistics (word frequency/NER) and is never reproduced or republished, and
+is off by default (must be explicitly enabled per run); scraped review content (title,
+comment, star rating) is real customer-authored text used solely for local aspect-NER
+training/analysis in this repository, not redistributed or republished, and contains no
+information that identifies the reviewing individual beyond what CarWale itself already
+displays publicly on the review page.
 
 ## Known limitations
 
@@ -756,6 +885,21 @@ must be explicitly enabled per run.
   reinforces those errors -- `scripts/build_ner_seed.py` produces a starting point, not
   ready-to-train data; real quality requires a human reviewing `"entities"` spans/labels and
   setting `"verified": true` per row before training.
+- **CarWale reviews measure real customer opinion, not a market outcome, search interest, or
+  media coverage, and are not comparable in kind to the other four sources.** The aspect NER
+  model is trained on only 174 hand-annotated reviews (Volkswagen + BYD) -- a small corpus for
+  a from-scratch spaCy NER model -- so per-aspect precision/recall varies and should be treated
+  as indicative, not authoritative; the confusion matrix chapter shows exactly where it
+  confuses aspects.
+- **The two hand-annotated training files (`cars_reviews_ner_inline.txt`,
+  `cars_reviews_labeled.json`) are real manual labeling work and are not shipped in this
+  repository** (`data/raw/` is entirely git-ignored, matching this project's existing
+  convention for e.g. the Google Trends manual export) -- they must be present locally before
+  the NER/classification chapters can run; there is no synthetic fallback.
+- **CarWale reviews used for the "apply the trained model to new reviews" chapter are India-
+  focused and English-language**, reflecting CarWale's own audience -- this is not a
+  representative sample of German or Chinese domestic customer opinion, only of CarWale's
+  reviewer base for these models.
 
 ## Troubleshooting
 
@@ -794,3 +938,15 @@ must be explicitly enabled per run.
   matches) -- a `TimeBudget` that expires before any training epoch completes still writes the
   pipeline to disk (via `nlp.to_disk`), but with only the base pretrained weights, so scores
   will reflect an untrained custom-label NER component in that case.
+- If `load_inline_annotated_articles()`/`load_labeled_reviews()` raise `FileNotFoundError`, the
+  two hand-annotated review files are missing under `data/raw/reviews/` -- place them there
+  first (see "Known limitations" above; there is no synthetic fallback).
+- If `ensure_reviews_dataset()` reports `0 fetched` in `mode="live"`, check whether
+  carwale.com's real `robots.txt` or page markup changed -- `discover_model_urls()`/
+  `scrape_model_reviews()` both log a warning naming the exact URL and reason (HTTP status or
+  robots.txt) before skipping it.
+- If `load_cached_reviews()` raises a confusing pandas `ValueError` about a dictionary update
+  sequence, an old chunk file was created with a version of `scraping.py` predating the
+  `.metadata.json` sidecar exclusion fix -- delete and re-glob is unnecessary; re-running any
+  current version of `load_cached_reviews()`/`ensure_reviews_dataset()` uses the fixed filter
+  automatically.
