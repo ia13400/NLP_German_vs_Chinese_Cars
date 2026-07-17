@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.mypy_cache/
+.ruff_cache/
+.venv/
+.venv*
+
+# Project artifacts and raw data
+/data/raw/**
+/data/interim/**
+/data/processed/**
+/artifacts/**
+*.log
+
+# Editors
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,0 +1,142 @@
+sources:
+  # Kraftfahrt-Bundesamt -- actual German vehicle registrations. listing_url must point at
+  # the specific kba.de subpage where the relevant registration table is actually linked
+  # (KBA's overview pages link to further subpages rather than files directly).
+  kba:
+    enabled: true
+    access_method: "structured_download"
+    base_url: "https://www.kba.de/"
+    # KBA's "Monatliche Neuzulassungen" subpage, which links directly to the current
+    # month's FZ 10 table ("Neuzulassungen von Personenkraftwagen nach Marken und
+    # Modellreihen"). Only shows the latest month; older months live under year-specific
+    # subpages that must be located manually for a longer historical series.
+    listing_url: "https://www.kba.de/DE/Statistik/Fahrzeuge/Neuzulassungen/MonatlicheNeuzulassungen/monatl_neuzulassungen_node.html"
+    raw_directory: "data/raw/registrations/kba"
+    use_structured_downloads: true
+    force_refresh: false
+    cache_duration_hours: 720
+    rate_limit_seconds: 2.0
+    user_agent: "car-interest-nlp-research-bot/1.0"
+    start_date: "2018-01-01"
+    end_date: null
+    validation_rules:
+      required_columns: ["reporting_period", "brand", "value_type", "registrations"]
+      value_types: ["new_registrations", "stock"]
+
+  # Switzerland (federal, national) -- new passenger-car registrations by make, from the
+  # Federal Roads Office (FEDRO/ASTRA), disseminated via the Swiss Federal Statistical
+  # Office's public SDMX 2.1 REST API (disseminate.stats.swiss). Same measurement type as
+  # KBA (national new-registration flow), just a different country -- directly comparable
+  # to KBA in kind.
+  switzerland:
+    enabled: true
+    access_method: "structured_download"
+    base_url: "https://www.stats.swiss/"
+    raw_directory: "data/raw/registrations/switzerland"
+    use_structured_downloads: true
+    force_refresh: false
+    cache_duration_hours: 720
+    rate_limit_seconds: 2.0
+    user_agent: "car-interest-nlp-research-bot/1.0"
+    start_date: "2021-01-01"
+    end_date: null
+    validation_rules:
+      required_columns: ["reporting_period", "brand", "value_type", "registrations"]
+      value_types: ["new_registrations"]
+
+  # Google Trends -- real, publicly published relative search-interest scores
+  # (trends.google.com), fetched via the unofficial pytrends client (Google publishes no
+  # official Trends API). This measures consumer *interest* (what people search for), not
+  # a market outcome -- genuinely different in kind from the KBA/Switzerland registration
+  # sources above, and must never be interpreted as a registration or sales figure.
+  google_trends:
+    enabled: true
+    source_type: "search_interest"
+    access_method: "structured_download"
+    base_url: "https://trends.google.com/"
+    raw_directory: "data/raw/trends"
+    use_structured_downloads: true
+    force_refresh: false
+    cache_duration_hours: 720
+    # Google throttles/blocks the unofficial Trends endpoint aggressively; this is a long,
+    # deliberate delay between batched requests, not a generic API rate limit.
+    rate_limit_seconds: 20.0
+    user_agent: "car-interest-nlp-research-bot/1.0"
+    start_date: null
+    end_date: null
+    # "" (empty string, pytrends' convention) means worldwide interest -- this matches the
+    # real manually exported dataset currently checked for at
+    # data/raw/trends/google_trends_manual_export.csv (see TRENDS_MANUAL_EXPORT_FILENAME),
+    # which was downloaded as Worldwide, not Germany. Set to "DE" for Germany-only interest
+    # instead (matching the KBA/Switzerland chapters' geographic scope) if re-fetching live.
+    geo: ""
+    hl: "en-US"
+    # Google Trends' own relative "last N years" window, resolved at request time rather
+    # than a hardcoded date range that would go stale.
+    timeframe: "today 5-y"
+    # "today 5-y" is relative to "now", so a fetch/export always includes whatever partial
+    # current year has elapsed so far -- end_year drops any year after it (see
+    # TRENDS_DEFAULT_END_YEAR in google_trends.py) so that trailing partial year is never
+    # averaged in as a full year. 2025 matches KBA's FZ10_DEFAULT_YEARS and Switzerland's
+    # CH_DEFAULT_END_YEAR, so all three chapters compare the same 2021-2025 window.
+    end_year: 2025
+    # Google Trends allows at most 5 keywords per request and normalizes each request's
+    # results independently to 0-100 -- with more tracked brands than that, every batch
+    # would need to include this same anchor brand so batches can be rescaled onto one
+    # common, comparable index (see chain_trends_batches() in
+    # src/car_interest_nlp/data/google_trends.py). Also this project's flagship German
+    # brand, hence its use as the tracked_brands anchor below.
+    anchor_brand: "Volkswagen"
+    # Deliberately limited to these two brands, not the full German/Chinese lists in
+    # brands.yaml -- see README's "Google Trends" section. In short: the unofficial Trends
+    # endpoint aggressively rate-limits/blocks a multi-batch sweep of ~30 brands, and
+    # several tracked brand names (Mini, Smart, MAN, MG, Ora, ...) are ambiguous as bare
+    # search terms. Volkswagen and BYD are each group's clearest flagship brand, used here
+    # only as a directional search-interest indicator, not a comprehensive comparison.
+    tracked_brands: ["Volkswagen", "BYD"]
+    validation_rules:
+      required_columns: ["reporting_period", "brand", "value_type", "search_interest_index"]
+      value_types: ["search_interest"]
+
+  # GDELT DOC 2.0 API -- real, publicly published news-article metadata (title, url, seen
+  # date, source domain/country/language) for English-language coverage of the top-5
+  # German and top-5 Chinese car brands (see analysis/top_brands.py, ranked from real KBA
+  # registrations). GDELT documents "please limit requests to one every 5 seconds"
+  # (confirmed directly from a real 429 response); this project's sandbox saw persistent
+  # 429s even at 10-15s spacing during development (same symptom seen with Google Trends),
+  # so rate_limit_seconds is a starting point, not a guarantee of throughput -- see README's
+  # retry-strategy description (Retry-After-aware jittered backoff) and the generous
+  # 360-minute default time budget below.
+  gdelt:
+    enabled: true
+    source_type: "news_media"
+    access_method: "structured_download"
+    base_url: "https://api.gdeltproject.org/"
+    doc_endpoint: "https://api.gdeltproject.org/api/v2/doc/doc"
+    raw_directory: "data/raw/gdelt"
+    rate_limit_seconds: 6.0
+    time_limit_minutes: 480
+    user_agent: "car-interest-nlp-research-bot/1.0"
+    start_date: "2021-01-01"
+    end_date: "2025-12-31"
+    # DOC 2.0's sourcelang: filter -- English-language sources only, per the target scope.
+    source_lang: "eng"
+    # Every query is the quoted exact phrase "<brand> car" (e.g. `"MG car"`) ANDed with a
+    # "german"/"chinese" context word depending on the brand's group -- see build_query() in
+    # src/car_interest_nlp/data/gdelt.py. Always quoting the brand+"car" phrase (rather than
+    # a length-conditional bare/quoted brand token) avoids two real, directly-confirmed GDELT
+    # short-keyword rejections that a short brand name alone can trigger either way.
+    top_n_brands: 5
+    validation_rules:
+      required_columns: ["reporting_period", "brand", "value_type"]
+      value_types: ["news_article_count"]
+    # Full-article-text scraping (beyond GDELT's own title/metadata) -- off unless
+    # explicitly turned on for a given notebook run; see README's "GDELT news analysis"
+    # section for the robots.txt/rate-limiting/legal caveats this carries.
+    scraping:
+      enabled: true
+      raw_directory: "data/raw/gdelt_articles"
+      user_agent: "car-interest-nlp-research-bot/1.0 (+respects robots.txt)"
+      per_domain_delay_seconds: 3.0
+      respect_robots_txt: true
+      request_timeout_seconds: 15.0

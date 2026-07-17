@@ -1,0 +1,22 @@
+project:
+  title: "Analysis of German vs. Chinese Car Brand Registration Market Share (KBA)"
+  title_german: "Analyse des Marktanteils deutscher und chinesischer Automarken bei Neuzulassungen (KBA)"
+  random_seed: 42
+  language: "de"
+  date_range:
+    start: "2018-01-01"
+    end: null
+  output_paths:
+    data_dir: "data"
+    raw_dir: "data/raw"
+    processed_dir: "data/processed"
+    artifacts_dir: "artifacts"
+    figures_dir: "artifacts/figures"
+    reports_dir: "artifacts/reports"
+    cache_dir: "artifacts/cache"
+  progress_bar:
+    enabled: true
+    miniters: 1
+  cache:
+    reuse: true
+    force_refresh: false

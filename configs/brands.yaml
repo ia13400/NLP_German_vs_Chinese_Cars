@@ -1,0 +1,135 @@
+brands:
+  german:
+    - canonical_name: "Volkswagen"
+      aliases: ["Volkswagen", "VW"]
+      origin_group: "german"
+      ambiguous_aliases: []
+    - canonical_name: "Audi"
+      aliases: ["Audi"]
+      origin_group: "german"
+      ambiguous_aliases: []
+    - canonical_name: "BMW"
+      aliases: ["BMW"]
+      origin_group: "german"
+      ambiguous_aliases: []
+    - canonical_name: "Mercedes-Benz"
+      aliases: ["Mercedes-Benz", "Mercedes"]
+      origin_group: "german"
+      ambiguous_aliases: []
+    - canonical_name: "Porsche"
+      aliases: ["Porsche"]
+      origin_group: "german"
+      ambiguous_aliases: []
+    - canonical_name: "Opel"
+      aliases: ["Opel"]
+      origin_group: "german"
+      ambiguous_aliases: []
+    - canonical_name: "Smart"
+      aliases: ["Smart"]
+      origin_group: "german"
+      ambiguous_aliases: ["smart"]
+    - canonical_name: "Mini"
+      aliases: ["Mini", "MINI"]
+      origin_group: "german"
+      ambiguous_aliases: ["mini"]
+    - canonical_name: "MAN"
+      aliases: ["MAN"]
+      origin_group: "german"
+      ambiguous_aliases: ["man"]
+  chinese:
+    - canonical_name: "BYD"
+      # "BYD Auto" is Google Trends' own disambiguated topic label for the bare search
+      # term "BYD" (distinguishing the automaker from other "BYD" meanings); it appears
+      # as a column header in real manually-exported Google Trends CSVs.
+      aliases: ["BYD", "BYD Auto"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "MG"
+      aliases: ["MG", "MG Motor"]
+      origin_group: "chinese"
+      ambiguous_aliases: ["mg"]
+    - canonical_name: "NIO"
+      aliases: ["NIO"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "XPeng"
+      aliases: ["XPeng", "Xpeng"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Leapmotor"
+      aliases: ["Leapmotor"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Geely"
+      aliases: ["Geely"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Zeekr"
+      aliases: ["Zeekr"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Great Wall"
+      aliases: ["Great Wall", "GWM"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Ora"
+      aliases: ["Ora"]
+      origin_group: "chinese"
+      ambiguous_aliases: ["ora"]
+    - canonical_name: "Aiways"
+      aliases: ["Aiways"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Lynk & Co"
+      aliases: ["Lynk & Co"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Polestar"
+      aliases: ["Polestar"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Maxus"
+      aliases: ["Maxus"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Chery"
+      aliases: ["Chery"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Deepal"
+      aliases: ["Deepal"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Jaecoo"
+      aliases: ["Jaecoo"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Omoda"
+      aliases: ["Omoda"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "DFM"
+      aliases: ["DFM"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "JAC"
+      aliases: ["JAC", "Jac"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Voyah"
+      aliases: ["Voyah"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Seres"
+      aliases: ["Seres", "SERES"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+    - canonical_name: "Skywell"
+      aliases: ["Skywell", "SKYWELL"]
+      origin_group: "chinese"
+      ambiguous_aliases: []
+  other:
+    - canonical_name: "Other/Miscellaneous"
+      aliases: ["SONSTIGE"]
+      origin_group: "other"
+      ambiguous_aliases: []

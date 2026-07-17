@@ -1,0 +1,76 @@
+# Curated, real (not fabricated) automotive-domain gazetteer for the custom NER's Stage A
+# rule-based EntityRuler (src/car_interest_nlp/nlp/ner/gazetteer.py). CAR_BRAND patterns are
+# generated directly from configs/brands.yaml (single source of truth for brand names/aliases,
+# not duplicated here). Everything below is genuine, well-known industry terminology --
+# real suppliers, real technologies, real factories, real regulations -- curated as a starting
+# gazetteer, not an exhaustive list; extend as needed.
+gazetteer:
+  CAR_MODEL:
+    Volkswagen: ["Golf", "Tiguan", "Passat", "ID.3", "ID.4", "ID.7", "Polo", "Touareg", "T-Roc"]
+    "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "GLE", "GLC", "EQS", "EQE", "A-Class"]
+    BMW: ["3 Series", "5 Series", "X3", "X5", "i4", "iX", "i7", "1 Series"]
+    Audi: ["A4", "A6", "Q5", "Q7", "e-tron", "Q4 e-tron", "A3"]
+    Opel: ["Corsa", "Astra", "Mokka", "Grandland", "Insignia"]
+    MG: ["MG4", "MG ZS", "MG5", "MG HS", "MG3"]
+    BYD: ["BYD Seal", "BYD Atto 3", "BYD Han", "BYD Dolphin", "BYD Tang", "BYD Yuan"]
+    Polestar: ["Polestar 2", "Polestar 3", "Polestar 4"]
+    "Great Wall": ["Haval H6", "Haval Jolion", "Ora Funky Cat", "Wey"]
+    "Lynk & Co": ["Lynk & Co 01", "Lynk & Co 09", "Lynk & Co 05"]
+
+  SUPPLIER:
+    - CATL
+    - "LG Energy Solution"
+    - Panasonic
+    - "Samsung SDI"
+    - Bosch
+    - Continental
+    - "ZF Friedrichshafen"
+    - Valeo
+    - Magna
+    - Denso
+    - Aptiv
+    - "BorgWarner"
+
+  TECHNOLOGY:
+    - "LFP battery"
+    - "NMC battery"
+    - "solid-state battery"
+    - ADAS
+    - "autonomous driving"
+    - "800-volt architecture"
+    - "over-the-air update"
+    - "fast charging"
+    - "battery management system"
+    - "self-driving"
+    - "advanced driver assistance"
+
+  COMPONENT:
+    - "battery pack"
+    - "electric motor"
+    - inverter
+    - "battery cell"
+    - "charging port"
+    - "drive unit"
+    - "onboard charger"
+    - "power electronics"
+
+  FACTORY:
+    - Gigafactory
+    - "Debrecen plant"
+    - "Zuffenhausen plant"
+    - "Wolfsburg plant"
+    - "Munich plant"
+    - "Ingolstadt plant"
+    - "Rüsselsheim plant"
+    - "Szeged plant"
+
+  REGULATION:
+    - "EU tariff"
+    - CBAM
+    - "Euro 7"
+    - "Inflation Reduction Act"
+    - "anti-dumping duty"
+    - "anti-subsidy investigation"
+    - "emissions regulation"
+    - "carbon border adjustment"
+    - "countervailing duty"
